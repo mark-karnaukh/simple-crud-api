@@ -15,19 +15,22 @@
     "eslint-config-prettier": "~8.5",
     "eslint-plugin-jest": "~27.1",
     "jest": "~29.3",
+    "nodemon": "^2.0.20",
     "prettier": "~2.8",
     "ts-jest": "~29.0",
-    "tsutils": "~3.21",
+    "ts-node": "^10.9.1",
     "typescript": "~4.9"
   },
   "scripts": {
+    "start:dev": "nodemon",
     "start:prod": "node build/src/main.js",
-    "clean": "rm -rf coverage build tmp",
-    "prebuild": "npm run lint",
+    "clean": "rimraf coverage build tmp",
+    "prebuild": "npm run lint:fix && npm run prettier",
     "build": "tsc -p tsconfig.json",
     "build:watch": "tsc -w -p tsconfig.json",
     "build:release": "npm run clean && tsc -p tsconfig.release.json",
     "lint": "eslint . --ext .ts --ext .mts",
+    "lint:fix": "eslint . --ext .ts --ext .mts --fix",
     "test": "jest --coverage",
     "prettier": "prettier --config .prettierrc --write .",
     "test:watch": "jest --watch"
@@ -35,6 +38,7 @@
   "author": "Mark Karnaukh <23059751+mark-karnaukh@users.noreply.github.com>",
   "license": "ISC",
   "dependencies": {
-    "dotenv": "^16.0.3"
+    "dotenv": "^16.0.3",
+    "uuid": "^9.0.0"
   }
 }
