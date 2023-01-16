@@ -99,7 +99,7 @@ const manageUsers = (
           ...state.users.filter((user) => user.id !== operation.payload.id),
         ],
       },
-      state.users.filter((user) => user.id === operation.payload.id),
+      state.users.find((user) => user.id === operation.payload.id),
     ];
   }
 

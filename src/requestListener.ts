@@ -53,7 +53,7 @@ const requestListener =
 
             console.warn(message);
 
-            res.writeHead(400, { 'Content-Type': 'text/plain' });
+            res.writeHead(404, { 'Content-Type': 'text/plain' });
             res.write(message);
             res.end();
 
@@ -154,7 +154,7 @@ const requestListener =
 
               console.warn(message);
 
-              res.writeHead(400, { 'Content-Type': 'text/plain' });
+              res.writeHead(404, { 'Content-Type': 'text/plain' });
               res.write(message);
               res.end();
 
@@ -195,23 +195,25 @@ const requestListener =
           payload: { id },
         });
 
+        console.log("Fetched user", user);
+
         if (!user) {
           const message = `404 - Not Found - id === ${id} Doesn't Exist`;
 
           console.warn(message);
 
-          res.writeHead(400, { 'Content-Type': 'text/plain' });
+          res.writeHead(404, { 'Content-Type': 'text/plain' });
           res.write(message);
           res.end();
 
           return;
         }
 
-        res.writeHead(200, { 'Content-Type': 'application/json' });
+        res.writeHead(204, { 'Content-Type': 'application/json' });
         res.end(JSON.stringify(user));
       }
     } else {
-      const message = `404 - Resource ${req.url} Not Found\n`;
+      const message = `404 - Resource ${req.url} Not Found`;
 
       console.warn(message);
 
