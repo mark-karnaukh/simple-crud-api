@@ -1,39 +1,30 @@
-import { one } from './first.js';
+import http, { IncomingMessage, ServerResponse } from 'http';
+import * as dotenv from 'dotenv';
 
-/**
- * Some predefined delay values (in milliseconds).
- */
-export enum Delays {
-  Short = 500,
-  Medium = 2000,
-  Long = 5000,
-}
+import { API_URL_USERS } from './constants.js';
 
-/**
- * Returns a Promise<string> that resolves after a given time.
- *
- * @param {string} name - A name.
- * @param {number=} [delay=Delays.Medium] - A number of milliseconds to delay resolution of the Promise.
- * @returns {Promise<string>}
- */
-function delayedHello(
-  name: string,
-  delay: number = Delays.Medium,
-): Promise<string> {
-  return new Promise((resolve: (value?: string) => void) =>
-    setTimeout(() => resolve(`Hello, ${name}`), delay),
+dotenv.config();
+
+const requestListener = function (
+  req: IncomingMessage,
+  res: ServerResponse,
+): void {
+  console.log('Request: ', req.method);
+  console.log('Request: ', req.url);
+
+  if (req.url.includes(API_URL_USERS)) {
+    res.writeHead(200);
+    res.end('Hello from Server!');
+  } else {
+    res.statusCode = 404;
+    res.end();
+  }
+};
+
+const server = http.createServer(requestListener);
+
+server.listen(Number(process.env.PORT), process.env.HOST, () => {
+  console.log(
+    `Server is running on http://${process.env.HOST}:${process.env.PORT}`,
   );
-}
-
-// Please see the comment in the .eslintrc.json file about the suppressed rule!
-// Below is an example of how to use ESLint errors suppression. You can read more
-// at https://eslint.org/docs/latest/user-guide/configuring/rules#disabling-rules
-
-// eslint-disable-next-line @typescript-eslint/explicit-function-return-type
-export async function greeter(name: any) {
-  // eslint-disable-line @typescript-eslint/no-explicit-any
-  // The name parameter should be of type string. Any is used only to trigger the rule.
-  return await delayedHello(name, Delays.Long);
-}
-
-console.log('Started', one);
+});
