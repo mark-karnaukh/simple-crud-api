@@ -112,10 +112,11 @@ const initializeDB = (
     operation?: IDbOperation,
   ) => [IDbState, DbSelectedData?],
   dbStateQuery: (state: IDbState, operation?: IDbOperation) => DbSelectedData,
+  initialState?: IDbState,
 ): {
   connect: DbConnect;
 } => {
-  let dbState;
+  let dbState = initialState;
 
   const executeOperation = (operation: IDbOperation): DbOperationResult => {
     // Mutations
