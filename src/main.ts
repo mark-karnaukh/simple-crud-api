@@ -1,25 +1,10 @@
-import http, { IncomingMessage, ServerResponse } from 'http';
+import http from 'http';
+// import { v1 as uuidv1, validate as uuidValidate } from 'uuid';
 import * as dotenv from 'dotenv';
 
-import { API_URL_USERS } from './constants.js';
+import requestListener from './requestListener.js';
 
 dotenv.config();
-
-const requestListener = function (
-  req: IncomingMessage,
-  res: ServerResponse,
-): void {
-  console.log('Request: ', req.method);
-  console.log('Request: ', req.url);
-
-  if (req.url.includes(API_URL_USERS)) {
-    res.writeHead(200);
-    res.end('Hello from Server!');
-  } else {
-    res.statusCode = 404;
-    res.end();
-  }
-};
 
 const server = http.createServer(requestListener);
 
