@@ -24,7 +24,9 @@ export interface IOperationPayload {
   data: Omit<IUser, 'id'>;
 }
 
-export type IDbOperationData = IUser | IUser[] | IDbState;
+export type DbSelectedData = IUser | IUser[];
+
+export type DbOperationResult = DbSelectedData | null | undefined;
 
 export interface IDbOperation {
   type: string;
@@ -32,67 +34,112 @@ export interface IDbOperation {
 }
 
 export type DbConnect = () => {
-  executeOperation: (operation: IDbOperation) => void;
+  executeOperation: (operation: IDbOperation) => DbOperationResult;
 };
 
-const manageUsers = (
+const selectUsers = (
   state: IDbState = { users: [] },
-  operation: IDbOperation,
-): IDbOperationData => {
+  operation: IDbOperation = {} as IDbOperation,
+): DbSelectedData => {
   switch (operation.type) {
     case DB_GET_ALL_USERS:
       return state.users;
     case DB_GET_USER_BY_ID:
       return state.users.find((user) => user.id === operation.payload.id);
-    case DB_CREATE_USER:
-      return {
-        ...state,
-        users: [...state.users, { ...operation.payload.data, id: uuidv1() }],
-      };
-    case DB_UPDATE_USER:
-      return {
-        ...state,
-        users: [
-          ...state.users.map((user) => {
-            if (user.id === operation.payload.id) {
-              return {
-                ...user,
-                ...operation.payload.data,
-                id: operation.payload.id,
-              };
-            }
 
-            return user;
-          }),
-        ],
-      };
-    case DB_DELETE_USER:
-      return {
+    default:
+      return null;
+  }
+};
+
+const manageUsers = (
+  state: IDbState = { users: [] },
+  operation: IDbOperation = {} as IDbOperation,
+): [IDbState, DbSelectedData?] => {
+  if (operation.type === DB_CREATE_USER) {
+    const newUser = { ...operation.payload.data, id: uuidv1() };
+
+    return [
+      {
+        ...state,
+        users: [...state.users, newUser],
+      },
+      newUser,
+    ];
+  }
+  if (operation.type === DB_UPDATE_USER) {
+    const updatedState = {
+      ...state,
+      users: [
+        ...state.users.map((user) => {
+          if (user.id === operation.payload.id) {
+            return {
+              ...user,
+              ...operation.payload.data,
+              id: operation.payload.id,
+            };
+          }
+
+          return user;
+        }),
+      ],
+    };
+
+    return [
+      updatedState,
+      updatedState.users.find((user) => user.id === operation.payload.id),
+    ];
+  }
+
+  if (operation.type === DB_DELETE_USER) {
+    return [
+      {
         ...state,
         users: [
           ...state.users.filter((user) => user.id !== operation.payload.id),
         ],
-      };
-    default:
-      return state;
+      },
+      state.users.filter((user) => user.id === operation.payload.id),
+    ];
   }
+
+  return [state];
 };
 
 const initializeDB = (
-  dbStateManager: (
+  dbStateMutator: (
     state: IDbState,
     operation?: IDbOperation,
-  ) => IDbOperationData,
+  ) => [IDbState, DbSelectedData?],
+  dbStateQuery: (state: IDbState, operation?: IDbOperation) => DbSelectedData,
 ): {
   connect: DbConnect;
 } => {
   let dbState;
 
-  const executeOperation = (operation: IDbOperation): void => {
-    dbState = dbStateManager(dbState, operation);
+  const executeOperation = (operation: IDbOperation): DbOperationResult => {
+    // Mutations
+    if (
+      [DB_CREATE_USER, DB_DELETE_USER, DB_UPDATE_USER].includes(operation.type)
+    ) {
+      const [updatedState, operationResult] = dbStateMutator(
+        dbState,
+        operation,
+      );
+      dbState = updatedState;
+
+      return operationResult;
+    }
+
+    // Queries
+    if ([DB_GET_USER_BY_ID, DB_GET_ALL_USERS].includes(operation.type)) {
+      return dbStateQuery(dbState, operation);
+    }
+
+    return null;
   };
 
-  dbStateManager({} as IDbState);
+  dbStateMutator({} as IDbState);
 
   const connect: DbConnect = () => ({
     executeOperation,
@@ -113,4 +160,4 @@ const isUserValid = (user: unknown): boolean => {
   return hasAllProperties && hasCorrectValues;
 };
 
-export { manageUsers, initializeDB, isUserValid };
+export default { selectUsers, manageUsers, initializeDB, isUserValid };
