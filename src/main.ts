@@ -9,6 +9,7 @@ import {
   DB_CREATE_USER,
   DB_GET_ALL_USERS,
   DB_GET_USER_BY_ID,
+  DB_UPDATE_USER,
 } from './constants.js';
 
 import Db from './db.js';
@@ -109,20 +110,74 @@ const requestListener = function (
 
           res.statusCode = 201;
           res.end(JSON.stringify(newUser));
+        })
+        .on('error', (error) => {
+          const message = `500 - Internal Server Error`;
+
+          console.log(error);
+
+          res.writeHead(500, { 'Content-Type': 'text/plain' });
+          res.write(message);
+          res.end();
         });
-      // .on('error', (error) => {
-      //   const message = `500 - Internal Server Error`;
-
-      //   console.log(error);
-
-      //   res.writeHead(500, { 'Content-Type': 'text/plain' });
-      //   res.write(message);
-      //   res.end();
-      // });
     }
 
     if (req.method === 'PUT') {
-      console.log('PUT method!!!');
+      const id = req.url.split('/').filter((urlSubStr) => !!urlSubStr)[2];
+
+      if (!uuidValidate(id)) {
+        const message = `400 - Bad Request - userId ${id} Is Invalid (Not uuid)`;
+
+        console.error(message);
+
+        res.writeHead(400, { 'Content-Type': 'text/plain' });
+        res.write(message);
+        res.end();
+
+        return;
+      }
+
+      const body = [];
+      let data: string;
+
+      req
+        .on('data', (chunk) => {
+          body.push(chunk);
+        })
+        .on('end', () => {
+          data = Buffer.concat(body).toString();
+
+          const parsedData = JSON.parse(data);
+
+          const user = executeOperation({
+            type: DB_UPDATE_USER,
+            payload: { id, data: parsedData },
+          });
+
+          if (!user) {
+            const message = `404 - Not Found - id === ${id} Doesn't Exist`;
+
+            console.error(message);
+
+            res.writeHead(400, { 'Content-Type': 'text/plain' });
+            res.write(message);
+            res.end();
+
+            return;
+          }
+
+          res.writeHead(200, { 'Content-Type': 'application/json' });
+          res.end(JSON.stringify(user));
+        })
+        .on('error', (error) => {
+          const message = `500 - Internal Server Error`;
+
+          console.log(error);
+
+          res.writeHead(500, { 'Content-Type': 'text/plain' });
+          res.write(message);
+          res.end();
+        });
     }
 
     if (req.method === 'DELETE') {
