@@ -21,7 +21,7 @@ export interface IDbState {
 
 export interface IOperationPayload {
   id?: string;
-  data: Omit<IUser, 'id'>;
+  data?: Omit<IUser, 'id'>;
 }
 
 export type DbSelectedData = IUser | IUser[];
