@@ -169,9 +169,11 @@ describe('Scenario 3: DELETE users', () => {
   });
 
   it('should DELETE /api/users/18361190-95d6-11ed-83e4-750078a09b2b with 204 OK', async () => {
-    return await request.delete(`${API_URL_USERS}/18361190-95d6-11ed-83e4-750078a09b2b`).expect((response) => {
-      expect(response.status).toEqual(204);
-    });
+    return await request
+      .delete(`${API_URL_USERS}/18361190-95d6-11ed-83e4-750078a09b2b`)
+      .expect((response) => {
+        expect(response.status).toEqual(204);
+      });
   });
 
   it('should DELETE /api/users/aaaaa with 400 Bad Request', async () => {
@@ -217,12 +219,83 @@ describe('Scenario 4: Non-Existing API Endpoints', function () {
   });
 
   it('should GET /api/something with 404 Not Found', async () => {
+    return await request.get('/api/something').expect((response) => {
+      expect(response.status).toEqual(404);
+      expect(response.text).toEqual('404 - Resource /api/something Not Found');
+    });
+  });
+});
+
+describe('Scenario 3: PUT users', () => {
+  let server: Server<typeof IncomingMessage, typeof ServerResponse>;
+  let request;
+  const users = [
+    {
+      username: 'Jane Doe',
+      age: 27,
+      hobbies: ['Hiking and walking', 'Reading books'],
+      id: '18361190-95d6-11ed-83e4-750078a09b2b',
+    },
+  ];
+
+  const { executeOperation } = Db.initializeDB(Db.manageUsers, Db.selectUsers, {
+    users,
+  }).connect();
+
+  beforeAll((done) => {
+    server = createServer(requestListener(executeOperation, Db.isUserValid));
+    server.listen(2000);
+    request = SuperTest(server);
+    done();
+  });
+
+  afterAll((done) => {
+    server.close();
+    done();
+  });
+
+  it('should PUT /api/users/18361190-95d6-11ed-83e4-750078a09b2b with 200 OK', async () => {
     return await request
-      .get('/api/something')
+      .put(`${API_URL_USERS}/18361190-95d6-11ed-83e4-750078a09b2b`)
+      .send({
+        username: 'Jason Smith',
+        age: 33,
+        hobbies: ['Some funny stuff ...'],
+      })
+      .set('Accept', 'application/json')
+      .expect((response) => {
+        expect(response.status).toEqual(200);
+        expect(response.body).toEqual({
+          age: 33,
+          hobbies: ['Some funny stuff ...'],
+          id: '18361190-95d6-11ed-83e4-750078a09b2b',
+          username: 'Jason Smith',
+        });
+      });
+  });
+
+  it('should PUT /api/users/aaaaa with 400 Bad Request', async () => {
+    return await request.put(`${API_URL_USERS}/aaaaa`).expect((response) => {
+      expect(response.status).toEqual(400);
+      expect(response.text).toEqual(
+        '400 - Bad Request - userId aaaaa Is Invalid (Not uuid)',
+      );
+    });
+  });
+
+  it('should PUT /api/users/6ec0bd7f-11c0-43da-975e-2a6ad9ebae0b with 404 Not Found', async () => {
+    return await request
+      .put(`${API_URL_USERS}/6ec0bd7f-11c0-43da-975e-2a6ad9ebae0b`)
+      .send({
+        username: 'Jason Smith',
+        age: 33,
+        hobbies: ['Some funny stuff ...'],
+      })
+      .set('Accept', 'application/json')
       .expect((response) => {
         expect(response.status).toEqual(404);
         expect(response.text).toEqual(
-          '404 - Resource /api/something Not Found'
+          "404 - Not Found - id === 6ec0bd7f-11c0-43da-975e-2a6ad9ebae0b Doesn't Exist",
         );
       });
   });

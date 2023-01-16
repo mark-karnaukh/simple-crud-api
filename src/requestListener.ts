@@ -195,7 +195,7 @@ const requestListener =
           payload: { id },
         });
 
-        console.log("Fetched user", user);
+        console.log('Fetched user', user);
 
         if (!user) {
           const message = `404 - Not Found - id === ${id} Doesn't Exist`;
