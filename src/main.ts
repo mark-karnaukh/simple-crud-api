@@ -7,6 +7,7 @@ import {
   API_URL_USERS_REG_EXP_WITHOUT_ID,
   API_URL_USERS_REG_EXP_WITH_ID,
   DB_CREATE_USER,
+  DB_DELETE_USER,
   DB_GET_ALL_USERS,
   DB_GET_USER_BY_ID,
   DB_UPDATE_USER,
@@ -181,7 +182,39 @@ const requestListener = function (
     }
 
     if (req.method === 'DELETE') {
-      console.log('DELETE method!!!');
+      const id = req.url.split('/').filter((urlSubStr) => !!urlSubStr)[2];
+
+      if (!uuidValidate(id)) {
+        const message = `400 - Bad Request - userId ${id} Is Invalid (Not uuid)`;
+
+        console.error(message);
+
+        res.writeHead(400, { 'Content-Type': 'text/plain' });
+        res.write(message);
+        res.end();
+
+        return;
+      }
+
+      const user = executeOperation({
+        type: DB_DELETE_USER,
+        payload: { id },
+      });
+
+      if (!user) {
+        const message = `404 - Not Found - id === ${id} Doesn't Exist`;
+
+        console.error(message);
+
+        res.writeHead(400, { 'Content-Type': 'text/plain' });
+        res.write(message);
+        res.end();
+
+        return;
+      }
+
+      res.writeHead(200, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify(user));
     }
   } else {
     const message = `404 - Resource ${req.url} Not Found\n`;
