@@ -12,6 +12,7 @@
     "@types/uuid": "^9.0.0",
     "@typescript-eslint/eslint-plugin": "~5.44",
     "@typescript-eslint/parser": "~5.44",
+    "cross-env": "^7.0.3",
     "eslint": "~8.28",
     "eslint-config-prettier": "~8.5",
     "eslint-plugin-jest": "~27.1",
@@ -26,6 +27,7 @@
   "scripts": {
     "start:dev": "nodemon",
     "start:prod": "npm run build && node build/src/main.js",
+    "start:multi": "cross-env PORT=4000 ts-node ./src/cluster.ts",
     "clean": "rm -rf coverage build tmp",
     "prebuild": "npm run lint:fix && npm run prettier",
     "build": "tsc -p tsconfig.json",
